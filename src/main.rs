@@ -1,5 +1,25 @@
 use std::io::{self};
-use std::error::Error;
+use std::error;
+
+use clap::Parser;
+
+type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
+type AocFn = fn(&Vec<String>, bool) -> Result<String>;
+
+/// Read some lines of a file
+#[derive(Debug, Parser)]
+struct Cli {
+    /// Advent of Code 2024 Day
+    #[structopt(short = 'd')]
+    day: i32,
+
+    /// Part 1 or Part 2
+    #[structopt(short = 'p')]
+    part: i32,
+
+    /// Input file to read
+    input: Option<String>,
+}
 
 fn strip_trailing_newline(input: &str) -> &str {
     input
@@ -9,7 +29,7 @@ fn strip_trailing_newline(input: &str) -> &str {
 }
 
 
-fn day1p1(lines: &Vec<String>, output: &mut String, a: bool) -> Result<(), Box<dyn Error>> {
+fn day1(lines: &Vec<String>, a: bool) -> Result<String> {
     // Populate left and right vectors with values in chronological order
     let mut left = vec![0u32; lines.len()];
     let mut right = vec![0u32; lines.len()];
@@ -31,7 +51,7 @@ fn day1p1(lines: &Vec<String>, output: &mut String, a: bool) -> Result<(), Box<d
     left.sort();
     right.sort();
 
-    let summation: u32 = match a {
+    let result = match a {
         true =>
             left
                 .iter()
@@ -41,44 +61,70 @@ fn day1p1(lines: &Vec<String>, output: &mut String, a: bool) -> Result<(), Box<d
             left
                 .iter()
                 .fold(0, |acc, v| acc + *v * right.iter().filter(|x| **x == *v).count() as u32)
-
     };
-
-    *output = summation.to_string();
-    Ok(())
+    Ok(result.to_string())
 }
 
+#[cfg(test)]
+mod test {
+    use super::*;
 
-fn main() {
-    // TODO - Parse CLI args to determine what puzzle
+    #[test]
+    fn d1p1() {
+        // We can't construct a ParseIntError, so we have to pattern match.
+        let input = [
+            "3   4",
+            "4   3",
+            "2   5",
+            "1   3",
+            "3   9",
+            "3   3",
+        ];
+        assert_eq!(
+            day1(&input, true), "13".to_string()
+    );
+    }
+}
 
-    /* Read puzzle input:
-    *   - Read lines into Vec<String>
-    *   - Call relevant function based off of CLI args
-    *     (Sinature of all fns are (input: &Vec<String>, output: &mut String) -> Result
-    * 
-    */
+fn main() -> Result<()> {
+    //  Parse CLI args to determine what puzzle
+    let cli = Cli::parse();
+
+    // Get thr function or raise before any reading or parsing
+    let aoc_fn: AocFn = match cli.day {
+        1 => day1,
+        _ => Err("Not Implemented.")?
+    };
+
+    // Read all lines of txt file input
     let mut lines: Vec<String> = Vec::new();
-    let mut output = String::new();
     let mut input = String::new();
 
+    // TODO - read from file instead of stdin if provided with CLI args
     loop {
         input.clear();
         match io::stdin().read_line(&mut input) {
             Ok(len) => {
                 if len == 0 {
-                    match day1p1(&lines, &mut output, false) {
-                        Ok(_) => println!("{}", output),
-                        Err(error) => eprintln!("Parsing Error: {}", error),
-                    };
-                    return;
+                    break;
                 }
                 lines.push(strip_trailing_newline(&input).to_string());
             },
             Err(error) => {
                 eprintln!("STDIN Error: {}", error);
-                return;
             },
         }
+    }
+
+    // Call relevant AOC function, return result
+    match aoc_fn(&lines, cli.part == 1) {
+        Ok(result) => {
+            println!("{}", result);
+            Ok(())
+        },
+        Err(error) => {
+            eprintln!("STDIN Error: {}", error);
+            Err(error)
+        },
     }
 }
