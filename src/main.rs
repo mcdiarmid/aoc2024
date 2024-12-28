@@ -69,25 +69,32 @@ fn day1(lines: &Vec<String>, a: bool) -> Result<String> {
 mod test {
     use super::*;
 
+    fn input_str_to_vec_of_strings(input_str: &str) -> Vec<String> {
+        input_str
+            .lines()
+            .into_iter()
+            .filter(|&x| !x.is_empty())
+            .map(|s| s.to_string())
+            .collect()
+    }
+
     #[test]
     fn d1p1() {
-        // We can't construct a ParseIntError, so we have to pattern match.
-        let input = [
-            "3   4",
-            "4   3",
-            "2   5",
-            "1   3",
-            "3   9",
-            "3   3",
-        ];
-        assert_eq!(
-            day1(&input, true), "13".to_string()
-    );
+        let input_str = r"
+        3   4
+        4   3
+        2   5
+        1   3
+        3   9
+        3   3";
+        let input = input_str_to_vec_of_strings(&input_str);
+        assert_eq!(day1(&input, true).unwrap(), "11");
+        assert_eq!(day1(&input, false).unwrap(), "31");
     }
 }
 
 fn main() -> Result<()> {
-    //  Parse CLI args to determine what puzzle
+    // Parse CLI args to determine what puzzle
     let cli = Cli::parse();
 
     // Get thr function or raise before any reading or parsing
