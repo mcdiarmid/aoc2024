@@ -68,6 +68,20 @@ mod test {
         assert_eq!(day2(&input, true).unwrap(), "2");
         assert_eq!(day2(&input, false).unwrap(), "4");
     }
+
+    #[test]
+    fn test_day3_part1() {
+        let input_str = r"xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))";
+        let input = input_str_to_vec_of_strings(&input_str);
+        assert_eq!(day3(&input, true).unwrap(), "161");
+    }
+
+    #[test]
+    fn test_day3_part2() {
+        let input_str = r"xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))";
+        let input = input_str_to_vec_of_strings(&input_str);
+        assert_eq!(day3(&input, false).unwrap(), "48");
+    }
 }
 
 
@@ -79,6 +93,7 @@ fn main() -> Result<()> {
     let aoc_fn: AocFn = match cli.day {
         1 => day1,
         2 => day2,
+        3 => day3,
         _ => Err("Not Implemented.")?
     };
 

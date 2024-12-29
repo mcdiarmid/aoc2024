@@ -1,4 +1,5 @@
 use std::error;
+use regex::Regex;
 
 pub type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 pub type AocFn = fn(&Vec<String>, bool) -> Result<String>;
@@ -93,4 +94,41 @@ pub fn day2(lines: &Vec<String>, a: bool) -> Result<String> {
     }
 
     Ok(num_safe.to_string())
+}
+
+/* Day 3 */
+pub fn day3(lines: &Vec<String>, a: bool) -> Result<String> {
+    let haystack = lines.join("");
+    let d3_regex = Regex::new(
+        r"(?<func>do|don't|mul)\((?:(\d+),(\d+))?\)"
+    ).unwrap();
+    let mut enabled: i32 = 1;
+
+    // Figure out the result
+    let result = d3_regex
+        .captures_iter(haystack.as_str())
+        .map(|cap| {
+            match cap.name("func") {
+                Some(m) => match m.as_str() {
+                    "do" => { enabled = 1; 0 },
+                    "don't" => { enabled = a.into(); 0 },
+                    "mul" => {
+                        (2..=3)
+                            .map(|i| match cap.get(i) {
+                                Some(s) => s.as_str().parse::<i32>().unwrap(),
+                                None => 0
+                            })
+                            .fold(enabled, |res, a| { res * a })
+                    },
+                    _ => 0,
+                }
+                None => 0
+            }
+        })
+        .reduce(|a, b| a + b);
+
+    match result {
+        Some(sum) => Ok(sum.to_string()),
+        None => Err("Failed to reduce.")?
+    }
 }
